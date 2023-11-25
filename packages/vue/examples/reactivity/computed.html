@@ -8,31 +8,22 @@
   </head>
   <body>
     <div id="app"></div>
-    <div id="app2"></div>
   </body>
   <script>
-    const { reactive, effect } = Vue
+    const { reactive, effect, computed } = Vue
     const obj = reactive({
-      name: 'z',
+      name: 'zhangsan',
     })
-    const obj1 = reactive({
-      name: 'w',
+    const computedObj = computed(() => {
+      return 'name:' + obj.name
     })
-
     effect(() => {
-      document.querySelector('#app').innerText = obj.name
+      document.querySelector('#app').innerText = computedObj.value
     })
 
-    effect(() => {
-      document.querySelector('#app2').innerText = obj1.name
-    })
-
-    setTimeout(() => {
-      obj1.name = 'w-1' + new Date()
-    }, 2000)
     console.log(obj.name)
     setTimeout(() => {
-      obj.name = 'z-1' + new Date()
+      obj.name = 'lisi'
     }, 2000)
   </script>
 </html>
