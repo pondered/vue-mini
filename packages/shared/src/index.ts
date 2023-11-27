@@ -1,5 +1,5 @@
 export function isArray(value: unknown) {
-  return Array.isArray(value) && value.every(item => typeof item === 'string')
+  return Array.isArray(value)
 }
 
 export const isObject = (val: unknown) =>
@@ -12,6 +12,8 @@ export const hasChanged = (val: any, oldVal: any): boolean =>
   !Object.is(val, oldVal)
 
 export const isFunction = (val: unknown): boolean => typeof val === 'function'
+
+export const isString = (val: unknown): boolean => typeof val === 'string'
 
 export const extend = Object.assign
 
