@@ -13,16 +13,16 @@
   <script>
     const { h } = Vue
 
-    const vnode = h(
-      'div',
-      {
-        class: 'test',
+    const component = {
+      render() {
+        const vnode1 = h('div', 'component')
+        console.log(vnode1)
+        return vnode1
       },
-      [h('p', 'p1'), h('p', 'p2'), h('p', 'p3')]
-    )
+    }
+    const vnode2 = h(component)
+    console.log(vnode2)
 
-    console.log(vnode)
-
-    setTimeout(() => {}, 2000)
+    // render(vnode2, document.querySelector('#app'))
   </script>
 </html>
