@@ -1,4 +1,18 @@
+import { ShapeFlags } from 'packages/shared/src/shapeFlags'
 import { Text, createVNode } from './vnode'
+
+export function renderComponentRoot(instance) {
+  const { vnode, render } = instance
+  let result
+  try {
+    if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+      result = normalizeVNode(render!())
+    }
+  } catch (error) {
+    console.error(error)
+  }
+  return result
+}
 
 export function normalizeVNode(child) {
   if (typeof child === 'object') {
@@ -8,6 +22,6 @@ export function normalizeVNode(child) {
   }
 }
 
-export function cloneIfMounted(child){
-    return child
+export function cloneIfMounted(child) {
+  return child
 }

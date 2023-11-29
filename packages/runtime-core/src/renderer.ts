@@ -1,7 +1,10 @@
 import { EMPTY_OBJ, isString } from '@vue/shared'
+import { ReactiveEffect } from 'packages/reactivity/src/effect'
 import { log } from 'packages/shared/src/log'
 import { ShapeFlags } from 'packages/shared/src/shapeFlags'
-import { normalizeVNode } from './componentRenderUtils'
+import { createComponentInstance, setupComponent } from './component'
+import { normalizeVNode, renderComponentRoot } from './componentRenderUtils'
+import { queuePreFlushCb } from './scheduler'
 import { Comment, Fragment, Text, isSameVNodeType } from './vnode'
 
 export interface RenderOptions {
@@ -72,6 +75,42 @@ function baseCreateRenderer(options: RenderOptions): any {
     } else {
       patchElement(oldVNode, newVNode)
     }
+  }
+
+  const processComponent = (oldVNode, newVNode, container, anchor) => {
+    if (oldVNode === null || oldVNode === undefined) {
+      mountComponent(newVNode, container, anchor)
+    }
+  }
+
+  const mountComponent = (initialVNode, container, anchor) => {
+    initialVNode.component = createComponentInstance(initialVNode)
+    const instance = initialVNode.component
+
+    setupComponent(instance)
+    setupRenderEffect(instance, initialVNode, container, anchor)
+  }
+
+  const setupRenderEffect = (instance, initialVNode, container, anchor) => {
+    const componentUpdateFn = () => {
+      if (!instance.isMounted) {
+        const subTree = (instance.subTree = renderComponentRoot(instance))
+        patch(null, subTree, container, anchor)
+        initialVNode.el = subTree.el
+      } else {
+      }
+    }
+
+    const effect = (instance.effect = new ReactiveEffect(
+      componentUpdateFn,
+      () => {
+        queuePreFlushCb(update)
+      }
+    ))
+
+    const update = (instance.update = () => effect.run())
+
+    update()
   }
 
   const mountElement = (vnode, container, anchor) => {
@@ -187,6 +226,7 @@ function baseCreateRenderer(options: RenderOptions): any {
         if (shapeFlag & ShapeFlags.ELEMENT) {
           processElement(oldVNode, newVNode, container, anchor)
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
+          processComponent(oldVNode, newVNode, container, anchor)
         }
     }
   }
