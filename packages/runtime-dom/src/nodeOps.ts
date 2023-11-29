@@ -19,4 +19,16 @@ export const nodeOps = {
       parent.removeChild(child)
     }
   },
+
+  createText: text => doc.createTextNode(text),
+
+  setText: (node, text) => {
+    node.nodeValue = text
+  },
+
+  createComment: text => doc.createComment(text),
+
+  setComment: (node, text) => {
+    node.nodeValue = text
+  },
 }

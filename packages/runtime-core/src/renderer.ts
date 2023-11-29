@@ -1,5 +1,7 @@
-import { EMPTY_OBJ } from '@vue/shared'
+import { EMPTY_OBJ, isString } from '@vue/shared'
+import { log } from 'packages/shared/src/log'
 import { ShapeFlags } from 'packages/shared/src/shapeFlags'
+import { normalizeVNode } from './componentRenderUtils'
 import { Comment, Fragment, Text, isSameVNodeType } from './vnode'
 
 export interface RenderOptions {
@@ -8,6 +10,10 @@ export interface RenderOptions {
   insert(el, parent: Element, anchor?): void
   createElement(type: string)
   remove(el: Element)
+  createText(text: string)
+  setText(node, text)
+  createComment(text: string)
+  setComment(vnode, text)
 }
 
 export function createRenderer(options: RenderOptions) {
@@ -21,7 +27,44 @@ function baseCreateRenderer(options: RenderOptions): any {
     createElement: hostCreateElement,
     setElementText: hostSetElementText,
     remove: hostRemove,
+    createText: hostCreateText,
+    setText: hostSetText,
+    createComment: hostCreateComment,
+    setComment: hostSetComment,
   } = options
+
+  const processFragment = (oldVNode, newVNode, container, anchor) => {
+    if (oldVNode === null || oldVNode === undefined) {
+      mountChildren(newVNode.children, container, anchor)
+    } else {
+      patchChildren(oldVNode, newVNode, container, anchor)
+    }
+  }
+
+  const processCommentNode = (oldVNode, newVNode, container, anchor) => {
+    if (oldVNode === null || oldVNode === undefined) {
+      newVNode.el = hostCreateComment(newVNode.children)
+      hostInsert(newVNode.el, container, anchor)
+    } else {
+      const el = (newVNode.el = oldVNode.el!)
+      if (newVNode.child !== oldVNode.children) {
+        hostSetComment(el, newVNode.children)
+      }
+    }
+  }
+
+  const processText = (oldVNode, newVNode, container, anchor) => {
+    if (oldVNode === null || oldVNode === undefined) {
+      newVNode.el = hostCreateText(newVNode.children)
+      hostInsert(newVNode.el, container, anchor)
+    } else {
+      const el = (newVNode.el = oldVNode.el!)
+      if (newVNode.children !== oldVNode.children) {
+        log(el, newVNode.children)
+        hostSetText(el, newVNode.children)
+      }
+    }
+  }
 
   const processElement = (oldVNode, newVNode, container, anchor) => {
     if (oldVNode === null || oldVNode === undefined) {
@@ -55,6 +98,17 @@ function baseCreateRenderer(options: RenderOptions): any {
 
     patchChildren(oldVNode, newVNode, el, null)
     patchProps(el, newVNode, oldProps, newProps)
+  }
+
+  const mountChildren = (children, container, anchor) => {
+    if (isString(children)) {
+      children = children.split('')
+    }
+
+    for (let index = 0; index < children.length; index++) {
+      const child = (children[index] = normalizeVNode(children[index]))
+      patch(null, child, container, anchor)
+    }
   }
 
   const patchChildren = (oldVNode, newVNode, container, anchor) => {
@@ -121,10 +175,13 @@ function baseCreateRenderer(options: RenderOptions): any {
     const { type, shapeFlag } = newVNode
     switch (type) {
       case Text:
+        processText(oldVNode, newVNode, container, anchor)
         break
       case Comment:
+        processCommentNode(oldVNode, newVNode, container, anchor)
         break
       case Fragment:
+        processFragment(oldVNode, newVNode, container, anchor)
         break
       default:
         if (shapeFlag & ShapeFlags.ELEMENT) {
