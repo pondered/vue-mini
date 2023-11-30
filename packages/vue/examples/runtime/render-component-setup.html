@@ -17,6 +17,11 @@
         const obj = reactive({
           name: 'xxx',
         })
+
+        setTimeout(() => {
+          obj.name = 'yyy'
+        }, 2000)
+
         return () => h('div', obj.name)
       },
     }
