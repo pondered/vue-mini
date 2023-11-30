@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="./../../dist/vue.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+
+  <script>
+    const { h, render, Text } = Vue
+    const comonent = {
+      data() {
+        return { msg: 'hello data' }
+      },
+      render() {
+        return h('div', this.msg)
+      },
+      beforeCreate() {
+        console.log('before')
+      },
+      created() {
+        setTimeout(()=>{
+          this.msg = 'hello created'
+        }, 2000)
+      },
+      beforeMount() {
+        console.log('before mounted')
+      },
+      mounted() {
+        console.log('mounted', this.msg)
+      },
+    }
+    const vnode = h(comonent)
+    render(vnode, document.querySelector('#app'))
+  </script>
+</html>

@@ -102,11 +102,21 @@ function baseCreateRenderer(options: RenderOptions): any {
         const subTree = (instance.subTree = renderComponentRoot(instance))
         patch(null, subTree, container, anchor)
         initialVNode.el = subTree.el
-
+        instance.isMounted = true
         if (m) {
           m()
         }
       } else {
+        let { next, vnode } = instance
+        if (!next) {
+          next = vnode
+        }
+        const nextTree = renderComponentRoot(instance)
+        const prevTree = instance.subTree
+        instance.subTree = nextTree
+        patch(prevTree, nextTree, container, anchor)
+
+        next.el = nextTree.el
       }
     }
 

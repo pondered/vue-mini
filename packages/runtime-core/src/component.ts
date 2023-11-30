@@ -1,5 +1,5 @@
 import { reactive } from '@vue/reactivity'
-import { isObject } from '@vue/shared'
+import { isFunction, isObject } from '@vue/shared'
 import { onBeforeMount, onMounted } from './apiLifecycle'
 
 let uid = 0
@@ -35,12 +35,29 @@ export function setupComponent(instance) {
 }
 
 function setupStatefulComponent(instance) {
+  const component = instance.type
+  const { setup } = component
+  if (setup) {
+    const setupResult = setup()
+    handleSetupResult(instance, setupResult)
+  } else {
+    finishComponentSetup(instance)
+  }
+}
+
+export function handleSetupResult(instance, setupResult) {
+  if (isFunction(setupResult)) {
+    instance.render = setupResult
+  }
   finishComponentSetup(instance)
 }
 
 export function finishComponentSetup(instance) {
   const component = instance.type
-  instance.render = component.render
+
+  if (!instance.render) {
+    instance.render = component.render
+  }
 
   applyOptions(instance)
 }
