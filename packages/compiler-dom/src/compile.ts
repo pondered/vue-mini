@@ -4,6 +4,7 @@ import { baseParse } from 'packages/compiler-core/src/parse'
 import { transform } from 'packages/compiler-core/src/transform'
 import { transformElement } from 'packages/compiler-core/src/transforms/transformElement'
 import { transformText } from 'packages/compiler-core/src/transforms/transformText'
+import { log } from 'packages/shared/src/log'
 
 export function baseCompile(template: string, options = {}) {
   const ast = baseParse(template)
@@ -15,5 +16,6 @@ export function baseCompile(template: string, options = {}) {
     })
   )
 
+  log(ast)
   return generate(ast)
 }

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="./../../dist/vue.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+  <script>
+    const { compile, h, render } = Vue
+
+    const template = `<div>hello world {{ msg }}</div>`
+
+    const renderFn = compile(template)
+    console.log(renderFn)
+    const component = {
+      data() {
+        return {
+          msg: 'xxx123',
+        }
+      },
+      render: renderFn,
+      created() {
+        setTimeout(() => {
+          this.msg = '123'
+        }, 2000)
+      },
+    }
+    const vnode = h(component)
+    render(vnode, document.querySelector('#app'))
+  </script>
+</html>

@@ -26,7 +26,6 @@ class RefImpl<T> {
   public dep?: Dep = undefined
 
   constructor(value: T, public readonly __v_isShallow: boolean) {
-    console.debug(`ref ${value}`)
     this._rawValue = value
     this._value = __v_isShallow ? value : toReactive(value)
   }
