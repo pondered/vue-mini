@@ -1,3 +1,4 @@
+import { log } from 'packages/shared/src/log'
 import { ElementTypes, NodeTypes } from './ast'
 
 const enum TagType {
@@ -96,6 +97,10 @@ function parseTag(context: ParserContext, type: TagType) {
 
   advanceBy(context, match[0].length)
 
+  advanceSpaces(context)
+  let props = parseAttributes(context, type)
+  // log(props)
+
   let isSelfClosing = startsWith(context.source, '/>')
   advanceBy(context, isSelfClosing ? 2 : 1)
 
@@ -103,10 +108,107 @@ function parseTag(context: ParserContext, type: TagType) {
     type: NodeTypes.ELEMENT,
     tag,
     tagType: ElementTypes.ELEMENT,
-    props: [],
+    props,
     children: [],
   }
 }
+
+function advanceSpaces(context: ParserContext): void {
+  const match = /^[/t/r/n/f ]+/.exec(context.source)
+  if (match) {
+    advanceBy(context, match[0].length)
+  }
+}
+
+function parseAttributes(context, type) {
+  const props: any = []
+  const attributeNames = new Set<string>()
+
+  while (
+    context.source.length > 0 &&
+    !startsWith(context.source, '>') &&
+    !startsWith(context.source, '/>')
+  ) {
+    const attr = parseAttribute(context, attributeNames)
+    log('type:', type === TagType.Start)
+    if (type === TagType.Start) {
+      props.push(attr)
+    }
+    advanceSpaces(context)
+  }
+
+  return props
+}
+
+function parseAttribute(context: ParserContext, nameSet: Set<string>) {
+  const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)!
+  const name = match[0]
+  nameSet.add(name)
+  advanceBy(context, name.length)
+
+  let value: any = undefined
+  if (/^[\t\r\n\f ]*=/.test(context.source)) {
+    advanceSpaces(context)
+    advanceBy(context, 1)
+    advanceSpaces(context)
+    value = parseAttributeValue(context)
+  }
+
+  // v-
+  if (/^(v-[A-Za-z0-9-]|:|\.|@|#)/.test(name)) {
+    const match =
+      /(?:^v-([a-zA-Z0-9-]+))?(?:(?::|^\.|^@|^#)(\[[^\]]+\]|[^\.]+))?(.+)?$/i.exec(
+        name
+      )!
+    let dirName = match[1]
+    return {
+      type: NodeTypes.DIRECTIVE,
+      name: dirName,
+      exp: value && {
+        type: NodeTypes.SIMPLE_EXPRESSION,
+        content: value.content,
+        isStatic: false,
+        loc: {},
+      },
+      arg: undefined,
+      modifiers: undefined,
+      loc: {},
+    }
+
+    return {
+      type: NodeTypes.ATTRIBUTE,
+      name,
+      value: value && {
+        type: NodeTypes.TEXT,
+        content: value.content,
+        loc: {},
+      },
+      loc: {},
+    }
+  }
+}
+
+function parseAttributeValue(context: ParserContext) {
+  let content = ''
+
+  const quote = context.source[0]
+  advanceBy(context, 1)
+
+  const endIndex = context.source.indexOf(quote)
+  if (endIndex === -1) {
+    content = parseTextData(context, context.source.length)
+  } else {
+    content = parseTextData(context, endIndex)
+    advanceBy(context, 1)
+  }
+
+  return {
+    content,
+    isQuoted: true,
+    loc: {},
+  }
+}
+
 function parseText(context: ParserContext) {
   const endTokens = ['<', '{{']
   let endIndex = context.source.length
