@@ -12,5 +12,5 @@ export {
 export { compile } from '@vue/vue-compat'
 // export { compile } from '@vue/compiler-dom'
 export { createCommentVNode } from '@vue/runtime-core'
-export { render } from '@vue/runtime-dom'
+export { createApp, render } from '@vue/runtime-dom'
 export { toDisplayString } from '@vue/shared'

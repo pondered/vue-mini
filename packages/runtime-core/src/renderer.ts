@@ -6,6 +6,7 @@ import { createComponentInstance, setupComponent } from './component'
 import { normalizeVNode, renderComponentRoot } from './componentRenderUtils'
 import { queuePreFlushCb } from './scheduler'
 import { Comment, Fragment, Text, isSameVNodeType } from './vnode'
+import { createAppApi } from './apiCreateApp'
 
 export interface RenderOptions {
   patchProp(el: Element, key: string, prevValue: any, nextValue: any): void
@@ -426,6 +427,7 @@ function baseCreateRenderer(options: RenderOptions): any {
 
   return {
     render,
+    createApp: createAppApi(render)
   }
 }
 

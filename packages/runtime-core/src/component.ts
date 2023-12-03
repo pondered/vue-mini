@@ -3,6 +3,7 @@ import { isFunction, isObject } from '@vue/shared'
 import { onBeforeMount, onMounted } from './apiLifecycle'
 
 let uid = 0
+let compile: any = null
 
 export const enum LifecycleHook {
   BEFORE_CREATE = 'bc',
@@ -56,10 +57,20 @@ export function finishComponentSetup(instance) {
   const component = instance.type
 
   if (!instance.render) {
+    if (compile && !component.render) {
+      if (component.template) {
+        const template = component.template
+        component.render = compile(template)
+      }
+    }
     instance.render = component.render
   }
 
   applyOptions(instance)
+}
+
+export function registerRuntimeCompiler(_compile: any) {
+  compile = _compile
 }
 
 function applyOptions(instance: any) {
